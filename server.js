@@ -64,17 +64,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Visit Log Schema (Analytics)
-const visitLogSchema = new mongoose.Schema({
-  username: String,
-  ip: String,
-  referrer: String,
-  userAgent: String,
-  timestamp: { type: Date, default: Date.now },
-});
-
-const VisitLog = mongoose.model('VisitLog', visitLogSchema);
-
 // Middleware - Auth check
 const isLoggedIn = (req, res, next) => {
   const token = req.cookies.token;
@@ -186,15 +175,6 @@ app.get('/:username', async (req, res) => {
   const { username } = req.params;
   const user = await User.findOne({ username });
   if (!user || !user.verified) return res.status(404).send('User not found');
-
-  // Log visit
-  const log = new VisitLog({
-    username,
-    ip: req.ip,
-    referrer: req.headers.referer || 'direct',
-    userAgent: req.headers['user-agent'],
-  });
-  await log.save();
 
   const profile = user.profile;
 
