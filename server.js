@@ -54,6 +54,7 @@ const userSchema = new mongoose.Schema({
   },
   verified: Boolean,
   verificationToken: String,
+  isAdmin: Boolean,
 });
 
 const User = mongoose.model('User', userSchema);
@@ -75,6 +76,7 @@ app.post('/register', async (req, res) => {
     password: hashedPass,
     verified: false,
     verificationToken: token,
+    isAdmin: false,
   });
 
   await newUser.save();
@@ -89,7 +91,7 @@ app.post('/register', async (req, res) => {
     html,
   });
 
-  res.redirect('/?msg=Check your email for verification.');
+  res.redirect('/');
 });
 
 // Email Verification
@@ -114,7 +116,7 @@ app.post('/login', async (req, res) => {
 
   if (!user.verified) return res.status(403).send('Email not verified');
 
-  const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ id: user._id, username: user.username, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {
     expiresIn: '1d',
   });
 
@@ -156,9 +158,21 @@ app.post('/save-profile', async (req, res) => {
   }
 });
 
-// Dashboard route
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+// Get All Users (Admin Only)
+app.get('/admin/users', async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).send('Unauthorized');
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isAdmin) return res.status(403).send('Forbidden');
+
+    const users = await User.find({});
+    res.json(users.map(u => ({ username: u.username, email: u.email, verified: u.verified })));
+  } catch (e) {
+    res.status(401).send('Invalid token');
+  }
 });
 
 // Public Profile Route
@@ -181,6 +195,16 @@ app.get('/:username', async (req, res) => {
     .replace('<!--MUSIC-->', profile.music || '');
 
   res.send(html);
+});
+
+// Dashboard route
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// Admin route
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Start server
