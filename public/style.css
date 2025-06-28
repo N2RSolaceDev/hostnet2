@@ -61,3 +61,14 @@ img {
   text-decoration: none;
   border-radius: 5px;
 }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
