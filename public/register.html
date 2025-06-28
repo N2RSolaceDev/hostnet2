@@ -13,6 +13,7 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
       padding: 20px;
     }
 
@@ -33,6 +34,7 @@
       padding: 10px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 16px;
     }
 
     button {
@@ -42,13 +44,18 @@
       border-radius: 5px;
       background-color: #007bff;
       color: white;
+      font-size: 16px;
       cursor: pointer;
+    }
+
+    h2 {
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Register</h2>
+    <h2>Create Your Bio Link</h2>
     <input type="email" id="email" placeholder="Email" required/>
     <input type="text" id="username" placeholder="Username" required/>
     <input type="password" id="password" placeholder="Password" required/>
@@ -67,7 +74,8 @@
         body: JSON.stringify({ email, username, password }),
       });
 
-      alert(await res.text());
+      const text = await res.text();
+      alert(text);
     }
   </script>
 </body>
