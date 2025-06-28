@@ -54,19 +54,16 @@ const userSchema = new mongoose.Schema({
   },
   verified: Boolean,
   verificationToken: String,
-  isAdmin: Boolean,
 });
 
 const User = mongoose.model('User', userSchema);
 
-// Routes
-
-// Serve register.html as homepage
+// Serve register.html as landing page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
-// Register Route
+// Register
 app.post('/register', async (req, res) => {
   const { email, username, password } = req.body;
   const existing = await User.findOne({ $or: [{ email }, { username }] });
@@ -81,7 +78,6 @@ app.post('/register', async (req, res) => {
     password: hashedPass,
     verified: false,
     verificationToken: token,
-    isAdmin: false,
   });
 
   await newUser.save();
@@ -121,7 +117,7 @@ app.post('/login', async (req, res) => {
 
   if (!user.verified) return res.status(403).send('Email not verified');
 
-  const token = jwt.sign({ id: user._id, username: user.username, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
     expiresIn: '1d',
   });
 
@@ -163,23 +159,6 @@ app.post('/save-profile', async (req, res) => {
   }
 });
 
-// Get All Users (Admin Only)
-app.get('/admin/users', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user || !user.isAdmin) return res.status(403).send('Forbidden');
-
-    const users = await User.find({});
-    res.json(users.map(u => ({ username: u.username, email: u.email, verified: u.verified })));
-  } catch (e) {
-    res.status(401).send('Invalid token');
-  }
-});
-
 // Public Profile Route
 app.get('/:username', async (req, res) => {
   const { username } = req.params;
@@ -207,9 +186,22 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// Admin route
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+// Admin route - only monkdev9@gmail.com can access
+app.get('/admin', async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).send('Unauthorized');
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user || user.email !== 'monkdev9@gmail.com') {
+      return res.status(403).send('Forbidden: Admin access required');
+    }
+
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  } catch (e) {
+    res.status(401).send('Invalid token');
+  }
 });
 
 // Start server
