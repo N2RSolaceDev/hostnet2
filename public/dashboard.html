@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Profile - Hostnet</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Edit Your Profile</h2>
+    <input type="text" id="name" placeholder="Name" />
+    <textarea id="bio" placeholder="Bio"></textarea>
+    <input type="text" id="avatar" placeholder="Avatar URL" />
+    <input type="text" id="music" placeholder="Background Music URL" />
+    <div id="links-container"></div>
+    <button onclick="addLink()">Add Link</button>
+    <button onclick="saveProfile()">Save Profile</button>
+  </div>
+
+  <script>
+    function addLink() {
+      const container = document.getElementById('links-container');
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <input type="text" placeholder="Title" />
+        <input type="text" placeholder="URL" />
+        <button onclick="this.parentNode.remove()">Remove</button>
+      `;
+      container.appendChild(div);
+    }
+
+    async function saveProfile() {
+      const links = [];
+      document.querySelectorAll('#links-container > div').forEach(div => {
+        const inputs = div.querySelectorAll('input');
+        if (inputs[0].value && inputs[1].value) {
+          links.push({ title: inputs[0].value, url: inputs[1].value });
+        }
+      });
+
+      const data = {
+        name: document.getElementById('name').value,
+        bio: document.getElementById('bio').value,
+        avatar: document.getElementById('avatar').value,
+        music: document.getElementById('music').value,
+        links,
+      };
+
+      const res = await fetch('/save-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      alert(await res.text());
+    }
+  </script>
+</body>
+</html>
