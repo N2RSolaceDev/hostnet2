@@ -10,6 +10,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
+require('dotenv').config();
 
 // Middleware
 app.use(express.static('public'));
@@ -27,8 +28,8 @@ const transporter = nodemailer.createTransport({
 
 // Load email template
 function getEmailTemplate(link) {
-  return fs.readFileSync(path.join(__dirname, 'views', 'email', 'verification-email.html'), 'utf8')
-    .replace('{{verificationLink}}', link);
+  let template = fs.readFileSync(path.join(__dirname, 'views', 'email', 'verification-email.html'), 'utf8');
+  return template.replace('{{verificationLink}}', link);
 }
 
 // MongoDB Connection
@@ -56,6 +57,20 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
+
+// Middleware - Auth check
+const isLoggedIn = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).send('Unauthorized');
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (e) {
+    res.status(401).send('Invalid token');
+  }
+};
 
 // Serve register.html as homepage
 app.get('/', (req, res) => {
@@ -104,7 +119,8 @@ app.get('/verify-email', async (req, res) => {
   user.verificationToken = null;
   await user.save();
 
-  res.redirect('/');
+  // Redirect to dashboard after verification
+  res.redirect('/dashboard');
 });
 
 // Login
@@ -125,13 +141,9 @@ app.post('/login', async (req, res) => {
 });
 
 // Get Current User Profile
-app.get('/profile/me', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
+app.get('/profile/me', isLoggedIn, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).send('User not found');
     res.json(user.profile);
   } catch (e) {
@@ -140,13 +152,9 @@ app.get('/profile/me', async (req, res) => {
 });
 
 // Save Profile
-app.post('/save-profile', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
+app.post('/save-profile', isLoggedIn, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).send('User not found');
 
     user.profile = req.body;
@@ -179,26 +187,8 @@ app.get('/:username', async (req, res) => {
 });
 
 // Dashboard route
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', isLoggedIn, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// Admin route - only monkdev9@gmail.com can access
-app.get('/admin', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user || user.email !== process.env.ADMIN_EMAIL) {
-      return res.status(403).send('Forbidden');
-    }
-
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-  } catch (e) {
-    res.status(401).send('Invalid token');
-  }
 });
 
 // Start server
