@@ -13,6 +13,7 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
       padding: 20px;
     }
 
@@ -49,7 +50,7 @@
     }
 
     audio {
-      display: none; /* Hide audio player */
+      display: none;
     }
   </style>
 </head>
@@ -65,7 +66,6 @@
   </div>
 
   <script>
-    // Fetch user profile on load
     window.onload = async () => {
       try {
         const res = await fetch('/profile/me');
