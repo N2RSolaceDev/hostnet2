@@ -4,12 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel - Hostnet</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h2>Admin Panel</h2>
-    <table id="users-table">
+    <table>
       <thead>
         <tr>
           <th>Username</th>
@@ -17,7 +54,7 @@
           <th>Status</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody id="users-table-body"></tbody>
     </table>
   </div>
 
@@ -25,7 +62,7 @@
     async function loadUsers() {
       const res = await fetch('/admin/users');
       const users = await res.json();
-      const tbody = document.querySelector('#users-table tbody');
+      const tbody = document.getElementById('users-table-body');
       tbody.innerHTML = '';
       users.forEach(user => {
         const tr = document.createElement('tr');
@@ -38,7 +75,7 @@
       });
     }
 
-    loadUsers();
+    window.onload = loadUsers;
   </script>
 </body>
 </html>
