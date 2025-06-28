@@ -4,7 +4,54 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Hostnet Bio Link</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 15px;
+    }
+
+    h1, p {
+      margin-bottom: 10px;
+    }
+
+    .links a {
+      display: block;
+      margin: 10px 0;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    audio {
+      display: none; /* Hide audio player */
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -16,5 +63,31 @@
     </div>
     <audio src="<!--MUSIC-->" autoplay loop></audio>
   </div>
+
+  <script>
+    // Fetch user profile on load
+    window.onload = async () => {
+      try {
+        const res = await fetch('/profile/me');
+        if (!res.ok) {
+          window.location.href = '/';
+          return;
+        }
+
+        const profile = await res.json();
+
+        document.querySelector('img').src = profile.avatar || '';
+        document.querySelector('h1').textContent = profile.name || '';
+        document.querySelector('p').textContent = profile.bio || '';
+
+        const linksContainer = document.querySelector('.links');
+        linksContainer.innerHTML = (profile.links || []).map(link =>
+          `<a href="${link.url}" target="_blank">${link.title}</a>`
+        ).join('\n');
+      } catch (err) {
+        window.location.href = '/';
+      }
+    };
+  </script>
 </body>
 </html>
