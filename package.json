@@ -1,7 +1,6 @@
 {
   "name": "bio-link",
   "version": "1.0.0",
-  "description": "A customizable bio link website with authentication and email verification",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -16,17 +15,5 @@
     "nodemailer": "^6.9.1",
     "uuid": "^9.0.0",
     "dotenv": "^16.0.3"
-  },
-  "engines": {
-    "node": ">=18.x"
-  },
-  "keywords": [
-    "bio-link",
-    "link-in-bio",
-    "profile",
-    "authentication",
-    "email-verification"
-  ],
-  "author": "Solace",
-  "license": "MIT"
+  }
 }
