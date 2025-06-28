@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -13,6 +16,9 @@ const app = express();
 require('dotenv').config();
 
 // Middleware
+app.use(helmet());
+app.use(cors());
+app.use(morgan('combined'));
 app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -58,7 +64,32 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Serve register.html as landing page
+// Visit Log Schema (Analytics)
+const visitLogSchema = new mongoose.Schema({
+  username: String,
+  ip: String,
+  referrer: String,
+  userAgent: String,
+  timestamp: { type: Date, default: Date.now },
+});
+
+const VisitLog = mongoose.model('VisitLog', visitLogSchema);
+
+// Middleware - Auth check
+const isLoggedIn = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).send('Unauthorized');
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (e) {
+    res.status(401).send('Invalid token');
+  }
+};
+
+// Serve register.html as homepage
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
@@ -126,15 +157,10 @@ app.post('/login', async (req, res) => {
 });
 
 // Get Current User Profile
-app.get('/profile/me', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
+app.get('/profile/me', isLoggedIn, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).send('User not found');
-
     res.json(user.profile);
   } catch (e) {
     res.status(401).send('Invalid token');
@@ -142,13 +168,9 @@ app.get('/profile/me', async (req, res) => {
 });
 
 // Save Profile
-app.post('/save-profile', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
+app.post('/save-profile', isLoggedIn, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).send('User not found');
 
     user.profile = req.body;
@@ -164,6 +186,15 @@ app.get('/:username', async (req, res) => {
   const { username } = req.params;
   const user = await User.findOne({ username });
   if (!user || !user.verified) return res.status(404).send('User not found');
+
+  // Log visit
+  const log = new VisitLog({
+    username,
+    ip: req.ip,
+    referrer: req.headers.referer || 'direct',
+    userAgent: req.headers['user-agent'],
+  });
+  await log.save();
 
   const profile = user.profile;
 
@@ -182,30 +213,12 @@ app.get('/:username', async (req, res) => {
 });
 
 // Dashboard route
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', isLoggedIn, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// Admin route - only monkdev9@gmail.com can access
-app.get('/admin', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).send('Unauthorized');
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user || user.email !== 'monkdev9@gmail.com') {
-      return res.status(403).send('Forbidden: Admin access required');
-    }
-
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-  } catch (e) {
-    res.status(401).send('Invalid token');
-  }
 });
 
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
