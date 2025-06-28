@@ -61,7 +61,12 @@ const User = mongoose.model('User', userSchema);
 
 // Routes
 
-// Register
+// Serve register.html as homepage
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+// Register Route
 app.post('/register', async (req, res) => {
   const { email, username, password } = req.body;
   const existing = await User.findOne({ $or: [{ email }, { username }] });
