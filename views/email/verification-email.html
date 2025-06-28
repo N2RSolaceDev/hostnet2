@@ -8,47 +8,74 @@
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       padding: 20px;
+      margin: 0;
     }
-    .container {
+    .email-container {
       max-width: 600px;
       margin: auto;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
-    h2 {
-      color: #2c3e50;
-    }
-    p {
-      font-size: 16px;
-      line-height: 1.6;
-    }
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 25px;
+    .email-header {
       background-color: #007BFF;
       color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
+      padding: 30px 20px;
+      text-align: center;
     }
-    .footer {
-      margin-top: 30px;
+    .email-body {
+      padding: 30px 20px;
+      line-height: 1.6;
+      color: #333;
+    }
+    .email-body h2 {
+      margin-top: 0;
+      font-size: 24px;
+      color: #007BFF;
+    }
+    .email-body p {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .verify-button {
+      display: inline-block;
+      padding: 12px 25px;
+      margin-top: 20px;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+    .email-footer {
+      padding: 20px;
+      text-align: center;
       font-size: 12px;
-      color: #777;
+      color: #999;
+      border-top: 1px solid #eee;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Welcome to Hostnet</h2>
-    <p>Thank you for registering! Please click the button below to verify your email address.</p>
-    <a href="{{verificationLink}}" class="btn">Verify My Email</a>
-    <div class="footer">
-      If you didn't request this, please ignore this email.
-      © 2025 Hostnet.wiki
+  <div class="email-container">
+    <div class="email-header">
+      <div class="logo">Hostnet Bio Link</div>
+    </div>
+    <div class="email-body">
+      <h2>Welcome to Hostnet!</h2>
+      <p>Thank you for registering with us. Please click the button below to verify your email address and activate your account.</p>
+      <a href="{{verificationLink}}" class="verify-button">Verify My Email</a>
+      <p style="margin-top: 30px;">If you did not create an account, no further action is required.</p>
+    </div>
+    <div class="email-footer">
+      &copy; 2025 Hostnet Bio Link. All rights reserved.
     </div>
   </div>
 </body>
